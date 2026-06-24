@@ -1,0 +1,54 @@
+# ──────────────────────────────────────────────
+# FraudScope — .gitignore
+# ──────────────────────────────────────────────
+
+# === DATA (ne jamais publier les données brutes) ===
+data/
+!data/get_dataset.md
+
+# === ENVIRONNEMENTS PYTHON / CONDA ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv/
+*.egg-info/
+dist/
+build/
+
+# === JUPYTER ===
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# === MLFLOW ===
+mlruns/
+mlartifacts/
+
+# === EVIDENTLY ===
+evidently_reports/*.html
+
+# === MODÈLES & ARTEFACTS LOURDS ===
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+*.onnx
+
+# === OS & ÉDITEURS ===
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# === SECRETS & CONFIG LOCAUX ===
+.env
+*.env
+config_local.py
+secrets.yaml
