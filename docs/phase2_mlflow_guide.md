@@ -3,6 +3,10 @@
 Ce guide explique pas-à-pas comment installer, configurer et utiliser MLflow dans le cadre du projet FraudScope.  
 Chaque concept est expliqué avant d'être mis en œuvre, pour que tu comprennes **pourquoi** avant **comment**.
 
+> **Note de version** : ce guide cible **MLflow 3.x**, qui est la version installée par `requirements.txt`.  
+> MLflow 3.x a supprimé le backend filesystem (`./mlruns`) et impose un backend base de données.  
+> On utilise **SQLite**, qui est inclus dans Python et ne nécessite aucune installation supplémentaire.
+
 ---
 
 ## Sommaire
@@ -59,16 +63,21 @@ cd C:\AIDEV\LaPlateforme_\FraudScope
 # macOS / Linux
 source .venv/bin/activate
 
-# Installer les dépendances (incluant mlflow>=2.8.0)
+# Installer les dépendances
 pip install -r requirements.txt
 ```
 
-Vérifier que MLflow est bien installé :
+Vérifier la version installée :
 
 ```bash
 mlflow --version
-# Résultat attendu : mlflow, version 2.x.x
+# Résultat attendu : mlflow, version 3.x.x
 ```
+
+> **MLflow 3.x et le backend SQLite** : à partir de MLflow 3.0, le backend filesystem (`./mlruns`) est
+> bloqué par défaut. Le backend standard est désormais une base de données SQL.  
+> On utilise **SQLite** (inclus dans Python, zéro configuration) pour le développement local.  
+> En production, on utiliserait PostgreSQL ou MySQL, mais SQLite est parfait ici.
 
 ### 2.3 Variables d'environnement
 
@@ -88,28 +97,40 @@ Ce fichier sera lu automatiquement par `python-dotenv` dans les notebooks et scr
 
 ### Pourquoi un serveur ?
 
-Par défaut, MLflow stocke tout en local dans un dossier `./mlruns`.  
+Par défaut, MLflow 3.x stocke tout dans une base de données SQLite locale.  
 En lançant un **serveur**, on accède à une **interface web** (l'UI MLflow) pour visualiser et comparer les runs. C'est beaucoup plus pratique.
 
-### Lancer le serveur
+### Lancer le serveur (MLflow 3.x — backend SQLite)
 
 Ouvre un **terminal dédié** (pas celui de Jupyter) et lance :
 
 ```bash
-# Depuis la racine du projet
+# Depuis la racine du projet (macOS / Linux)
 mlflow server \
   --host 127.0.0.1 \
   --port 8080 \
-  --backend-store-uri ./mlruns \
-  --default-artifact-root ./mlruns
+  --backend-store-uri sqlite:///mlflow.db \
+  --default-artifact-root ./mlartifacts
 ```
-
-> **Windows PowerShell** : remplace les `\` par des backticks `` ` `` ou mets tout sur une ligne.
 
 ```powershell
-# Version PowerShell sur une seule ligne
-mlflow server --host 127.0.0.1 --port 8080 --backend-store-uri ./mlruns --default-artifact-root ./mlruns
+# Windows PowerShell — avec backticks comme continuation de ligne
+mlflow server `
+  --host 127.0.0.1 `
+  --port 8080 `
+  --backend-store-uri sqlite:///mlflow.db `
+  --default-artifact-root ./mlartifacts
 ```
+
+```cmd
+:: Windows CMD — tout sur une ligne
+mlflow server --host 127.0.0.1 --port 8080 --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlartifacts
+```
+
+> **Ce que font ces options :**
+> - `--backend-store-uri sqlite:///mlflow.db` : stocke les runs, paramètres et métriques dans `mlflow.db` (créé automatiquement au premier lancement)
+> - `--default-artifact-root ./mlartifacts` : stocke les artefacts (modèles, graphiques) dans le dossier `mlartifacts/`
+> - Les deux dossiers/fichiers sont dans `.gitignore` — ne pas les committer
 
 Le serveur tourne en continu. **Ne ferme pas ce terminal** pendant que tu travailles.
 
@@ -153,7 +174,7 @@ Un run est **une exécution d'entraînement**. Il contient :
 ### Artefacts
 
 Ce sont les **fichiers produits par un run** et stockés par MLflow.  
-Exemples : le fichier `model.pkl`, une courbe Precision-Recall PNG, un rapport SHAP HTML.
+Exemples : le modèle, une courbe Precision-Recall PNG, un rapport SHAP HTML.
 
 ### Model Registry
 
@@ -171,50 +192,22 @@ Seul le modèle en `Production` est servi via l'API REST.
 
 Avant d'intégrer MLflow dans le pipeline complet, voici le pattern minimal pour comprendre la mécanique.
 
-Crée un fichier `scripts/hello_mlflow.py` et exécute-le :
+Exécute le script de prise en main fourni :
 
-```python
-# scripts/hello_mlflow.py
-# But : comprendre les 3 lignes fondamentales de MLflow
-
-import mlflow
-from dotenv import load_dotenv
-
-# 1. Charger les variables d'environnement (.env)
-load_dotenv()
-
-# 2. Se connecter au serveur de tracking
-#    MLFLOW_TRACKING_URI est lue automatiquement depuis .env
-mlflow.set_tracking_uri("http://127.0.0.1:8080")
-
-# 3. Créer (ou récupérer) l'expérience
-mlflow.set_experiment("fraud-detection-paytrack")
-
-# 4. Ouvrir un run : tout ce qui est loggué à l'intérieur est associé à ce run
-with mlflow.start_run(run_name="hello-test"):
-
-    # Logger des paramètres (hyperparamètres du modèle)
-    mlflow.log_param("n_estimators", 100)
-    mlflow.log_param("strategy", "baseline")
-
-    # Logger des métriques (résultats d'évaluation)
-    mlflow.log_metric("AUPRC", 0.42)
-    mlflow.log_metric("recall_fraud", 0.61)
-
-    # Logger un artefact (ici un fichier texte factice)
-    with open("note.txt", "w") as f:
-        f.write("Premier run MLflow FraudScope !")
-    mlflow.log_artifact("note.txt")
-
-    print("Run loggué avec succès ! Ouvre http://127.0.0.1:8080")
-```
-
-Exécute-le :
 ```bash
 python scripts/hello_mlflow.py
 ```
 
-Ouvre [http://127.0.0.1:8080](http://127.0.0.1:8080) : tu dois voir l'expérience `fraud-detection-paytrack` avec un run `hello-test` contenant tes paramètres, métriques et l'artefact `note.txt`.
+Ouvre [http://127.0.0.1:8080](http://127.0.0.1:8080) : tu dois voir l'expérience `fraud-detection-paytrack` avec un run `hello-test` contenant des paramètres, métriques et un artefact texte.
+
+**Ce que fait ce script :**
+1. Charge `.env` pour récupérer le `MLFLOW_TRACKING_URI`
+2. Se connecte au serveur avec `mlflow.set_tracking_uri()`
+3. Sélectionne l'expérience avec `mlflow.set_experiment()`
+4. Ouvre un run avec `mlflow.start_run()`
+5. Logue des paramètres, métriques et un artefact
+
+Si le run apparaît dans l'UI → tout est prêt pour le notebook `02_mlops.ipynb`.
 
 ---
 
@@ -323,10 +316,12 @@ print("Modèle FraudScopeXGB v1 en Production !")
 
 ### Lancer le serveur de prédiction
 
-Une fois le modèle en `Production`, MLflow peut le servir comme une API REST en une seule commande :
+Une fois le modèle en `Production`, MLflow peut le servir comme une API REST en une seule commande.
+
+> ⚠️ Le serveur de **tracking** (port 8080) doit toujours tourner en arrière-plan.
 
 ```bash
-# Dans un nouveau terminal (le serveur de tracking doit toujours tourner)
+# Nouveau terminal (macOS / Linux)
 mlflow models serve \
   --model-uri "models:/FraudScopeXGB/Production" \
   --host 127.0.0.1 \
@@ -334,33 +329,29 @@ mlflow models serve \
   --no-conda
 ```
 
-> `--no-conda` : utilise l'environnement Python courant au lieu de créer un env conda (plus rapide pour les tests).
+```powershell
+# Windows PowerShell
+mlflow models serve `
+  --model-uri "models:/FraudScopeXGB/Production" `
+  --host 127.0.0.1 `
+  --port 5001 `
+  --no-conda
+```
+
+> `--no-conda` : utilise l'environnement Python courant au lieu de créer un env conda (plus rapide pour les tests locaux).
 
 ### Tester l'endpoint
 
-```python
-# scripts/test_serving.py
-import requests
-import json
-import pandas as pd
+```bash
+python scripts/test_serving.py
+```
 
-# Une transaction de test (format dict orienté colonne)
-sample = {
-    "dataframe_split": {
-        "columns": ["TransactionAmt", "tx_count_1h", "tx_count_24h", "amount_ratio_7d"],
-        "data": [[150.0, 1, 3, 1.2]]
-    }
-}
+Ou manuellement avec `curl` :
 
-response = requests.post(
-    url="http://127.0.0.1:5001/invocations",
-    headers={"Content-Type": "application/json"},
-    data=json.dumps(sample)
-)
-
-print(f"Status : {response.status_code}")
-print(f"Prédiction : {response.json()}")
-# Résultat attendu : {"predictions": [0.07]}  ← probabilité de fraude
+```bash
+curl -X POST http://127.0.0.1:5001/invocations \
+  -H "Content-Type: application/json" \
+  -d '{"dataframe_split": {"columns": ["TransactionAmt"], "data": [[150.0]]}}'
 ```
 
 ---
@@ -371,51 +362,72 @@ Après avoir suivi ce guide, le projet devrait ressembler à :
 
 ```
 FraudScope/
-├── .env                          ← Variables d'environnement (non commité)
-├── mlruns/                       ← Base de données MLflow locale (non commité)
-│   └── fraud-detection-paytrack/
+├── .env                       ← Variables d'environnement (non commité)
+├── mlflow.db                  ← Base SQLite MLflow (créée automatiquement, non commitée)
+├── mlartifacts/               ← Artefacts des runs (modèles, graphiques, non commité)
+│   └── <experiment_id>/
 │       └── <run_id>/
-│           ├── params/
-│           ├── metrics/
 │           └── artifacts/
 │               ├── model/
 │               ├── pr_curve.png
 │               └── shap_beeswarm.png
 ├── docs/
-│   └── phase2_mlflow_guide.md    ← Ce fichier
+│   └── phase2_mlflow_guide.md ← Ce fichier
 ├── scripts/
-│   ├── hello_mlflow.py           ← Script de prise en main
-│   └── test_serving.py           ← Script de test de l'API REST
-├── 01_exploration.ipynb          ← Phase 1 ✅
-└── 02_mlops.ipynb                ← Phase 2 ⏳
+│   ├── hello_mlflow.py        ← Script de prise en main (à exécuter en 1er)
+│   └── test_serving.py        ← Script de test de l'API REST
+├── 01_exploration.ipynb       ← Phase 1 ✅
+└── 02_mlops.ipynb             ← Phase 2 ⏳
 ```
 
 ---
 
 ## 10. Troubleshooting
 
-### `Connection refused` sur le port 8080
+### ❌ `filesystem tracking backend is in maintenance mode`
+
+C'est l'erreur la plus courante avec MLflow 3.x. Le backend `./mlruns` n'est plus supporté.  
+**Solution** : utiliser le backend SQLite avec l'option `--backend-store-uri sqlite:///mlflow.db` (voir section 3).
+
+```powershell
+# Commande correcte pour MLflow 3.x
+mlflow server --host 127.0.0.1 --port 8080 --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlartifacts
+```
+
+### ❌ `Connection refused` sur le port 8080
 
 Le serveur MLflow n'est pas lancé. Ouvre un terminal et exécute la commande de la section 3.
 
-### `mlflow: command not found`
+### ❌ `mlflow: command not found`
 
-Ton environnement virtuel n'est pas activé. Exécute `.venv\Scripts\activate` (Windows) ou `source .venv/bin/activate` (Linux/macOS).
+Ton environnement virtuel n'est pas activé.  
+Exécute `.venv\Scripts\activate` (Windows) ou `source .venv/bin/activate` (Linux/macOS).
 
-### `ModuleNotFoundError: No module named 'mlflow'`
+### ❌ `ModuleNotFoundError: No module named 'mlflow'`
 
 ```bash
-pip install mlflow>=2.8.0
+pip install -r requirements.txt
 ```
 
-### Le run s'enregistre dans `./mlruns` mais pas dans l'UI
+### ❌ Le run s'enregistre mais n'apparaît pas dans l'UI
 
 Tu n'as pas configuré le `tracking_uri`. Assure-toi que ton code contient :
 ```python
 mlflow.set_tracking_uri("http://127.0.0.1:8080")
 ```
-ou que `MLFLOW_TRACKING_URI` est défini dans ton `.env`.
+ou que `MLFLOW_TRACKING_URI=http://127.0.0.1:8080` est défini dans ton `.env`.
 
-### `MlflowException: RESOURCE_ALREADY_EXISTS` lors de `register_model`
+### ❌ `MlflowException: RESOURCE_ALREADY_EXISTS` lors de `register_model`
 
-Le modèle existe déjà dans le Registry. C'est normal lors d'une ré-exécution : MLflow crée une nouvelle version (`v2`, `v3`...) au lieu d'écraser.
+Le modèle existe déjà dans le Registry. C'est normal lors d'une ré-exécution : MLflow crée automatiquement une nouvelle version (`v2`, `v3`...) sans écraser.
+
+### ❌ `MLFLOW_ALLOW_FILE_STORE` — solution de contournement temporaire
+
+Si tu as absolument besoin du backend filesystem pour un test rapide, tu peux désactiver le blocage en définissant la variable d'environnement avant de lancer le serveur.  
+**Déconseillé pour une utilisation régulière — préfère la solution SQLite.**
+
+```powershell
+# Windows PowerShell — contournement temporaire uniquement
+$env:MLFLOW_ALLOW_FILE_STORE = "true"
+mlflow server --host 127.0.0.1 --port 8080 --backend-store-uri ./mlruns --default-artifact-root ./mlruns
+```
