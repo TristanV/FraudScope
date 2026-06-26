@@ -37,15 +37,29 @@ The Chief Data Officer (CDO) has mandated a Data Engineering & ML team to answer
 
 ---
 
+## 🗺️ Project Phases
+
+| Phase | Theme | Deliverable | Status |
+|---|---|---|---|
+| 1 | EDA · Accuracy trap · Feature engineering | `01_exploration.ipynb` | ✅ Done |
+| 2 | MLflow · IEEE-CIS training · Registry · Serving · SHAP | `02_mlops.ipynb` + REST endpoint | ⏳ Next |
+| 3 | Graph features (NetworkX) + GNN on Elliptic (GCN/GAT) | `03_graphnn.ipynb` | 🔜 Planned |
+| 4 | Drift monitoring (Evidently AI) | HTML Evidently reports | 🔜 Planned |
+| Final | CDO presentation | 20-min pitch | 🔜 Planned |
+
+---
+
 ## 🏗️ Project Structure
 
 ```
 fraud-scope/
-├── 01_exploration.ipynb       # EDA, accuracy trap, temporal feature engineering
-├── 02_modelling.ipynb         # Resampling strategies, GNN, model comparison
-├── 03_mlops.ipynb             # MLflow tracking, registry, serving, SHAP, Evidently
-├── mlruns/                    # MLflow experiment runs
-├── evidently_reports/         # HTML drift & performance reports
+├── 01_exploration.ipynb       ✅  # EDA, accuracy trap, temporal feature engineering
+├── 02_mlops.ipynb             ⏳  # MLflow tracking, registry, serving, SHAP
+├── 03_graphnn.ipynb           🔜  # Graph features (NetworkX) + GCN/GAT on Elliptic
+├── mlruns/                        # MLflow experiment runs
+├── evidently_reports/             # HTML drift & performance reports
+├── figures/                       # EDA and model plots
+├── artifacts/                     # CSV exports (CV results, metrics)
 ├── documents/
 │   ├── roadmap.md
 │   └── documentation.md
@@ -98,7 +112,7 @@ pip install -r requirements.txt
 ```
 
 ### 3. Download the dataset
-Download from [Kaggle IEEE-CIS Fraud Detection](https://www.kaggle.com/competitions/ieee-fraud-detection/data) and place `train.csv` / `test.csv` in a `data/` folder.
+Download from [Kaggle IEEE-CIS Fraud Detection](https://www.kaggle.com/competitions/ieee-fraud-detection/data) and place `train_transaction.csv` / `train_identity.csv` in the `data/` folder.
 
 ### 4. Start MLflow server
 ```bash
@@ -107,7 +121,7 @@ mlflow server --host 127.0.0.1 --port 8080
 
 ### 5. Run notebooks in order
 ```
-01_exploration.ipynb → 02_modelling.ipynb → 03_mlops.ipynb
+01_exploration.ipynb → 02_mlops.ipynb → 03_graphnn.ipynb
 ```
 
 ### 6. Serve the production model
