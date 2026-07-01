@@ -75,18 +75,21 @@ This roadmap follows the 5-phase schedule adapted from the project brief.
 
 **Statut** : À FAIRE
 
-**Objectif** : Détecter les patterns de fraude en anneau invisibles aux modèles tabulaires, sur le dataset Elliptic.
+**Objectif** : Revenir aux notebooks pour explorer la structure graphe de la fraude et entraîner d'autres modèles sur le dataset Elliptic.
 
 ### Tâches
+- [ ] Reprendre le travail dans les notebooks après la phase MLflow IEEE-CIS
 - [ ] Construire le graphe de transactions avec NetworkX (10 000 transactions IEEE-CIS) :
   - Nœuds : comptes clients + marchands
   - Arêtes : transactions
   - Visualiser le graphe ; identifier au moins un cluster suspect
 - [ ] Extraire les features graphe : degré du nœud, marchands distincts sur 7j, centralité betweenness
 - [ ] Intégrer les features graphe dans le meilleur modèle XGBoost → mesurer le gain AUPRC
-- [ ] Entraîner sur le dataset Elliptic Bitcoin (via `torch_geometric`) :
+- [ ] Préparer et charger le dataset Elliptic Bitcoin (via `torch_geometric`)
+- [ ] Entraîner sur Elliptic :
   - GCN (Graph Convolutional Network, 2 couches)
   - GAT (Graph Attention Network, 2 couches)
+  - Tout autre modèle graphe jugé pertinent pour comparaison
 - [ ] Comparer : Recall, AUPRC, temps d'inférence ; expliquer pourquoi GAT peut surpasser GCN sur la fraude
 - [ ] Rédiger l'analyse comparative : ML tabulaire / tabulaire + features graphe / GNN pur
   - Critères : performance, latence, interprétabilité, maintenabilité
@@ -143,7 +146,7 @@ Rôles du jury : CDO, analyste fraude, responsable infrastructure.
 | Phase | Thème | Livrable | Statut |
 |---|---|---|---|
 | 1 | EDA · Accuracy trap · Feature engineering | `01_exploration.ipynb` | ✅ Terminée |
-| 2 | MLflow · Tracking IEEE-CIS · Registry · Serving · SHAP | `02_mlops.ipynb` + REST endpoint | ⏳ En cours |
-| 3 | Features graphe (NetworkX) + GNN Elliptic (GCN/GAT) | `03_graphnn.ipynb` + analyse | 🔜 À faire |
+| 2 | MLflow · Tracking IEEE-CIS · Registry · Serving · SHAP | `02_mlops.ipynb` + REST endpoint | ⏳ À faire |
+| 3 | Retour notebooks · Features graphe (NetworkX) + modèles Elliptic | `03_graphnn.ipynb` + analyse | 🔜 À faire |
 | 4 | Monitoring dérive Evidently AI | Rapports HTML Evidently | 🔜 À faire |
 | Final | Présentation CDO | Soutenance (20 min) | 🔜 À faire |
