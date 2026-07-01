@@ -35,7 +35,8 @@ FraudScope/
 │   └── documentation.md       # Documentation technique
 ├── figures/                   # Graphiques générés par les notebooks
 ├── artifacts/                 # Artefacts locaux (hors MLflow)
-├── mlruns/                    # Base de données MLflow locale (non commité)
+├── mlflow.db                  # Base de données MLflow (SQLite, non commité)
+├── mlruns/                    # Artefacts MLflow locaux (non commité)
 ├── .env                       # Variables d'environnement locales (non commité)
 ├── requirements.txt
 └── .gitignore
@@ -92,10 +93,17 @@ Suivre les instructions dans `data/get_dataset.md`.
 
 ```bash
 # Terminal dédié (laisser tourner)
-mlflow server --host 127.0.0.1 --port 8080 --backend-store-uri ./mlruns --default-artifact-root ./mlruns
+mlflow server \
+  --host 127.0.0.1 \
+  --port 8080 \
+  --backend-store-uri sqlite:///mlflow.db \
+  --default-artifact-root ./mlruns
 ```
 
 UI disponible sur [http://127.0.0.1:8080](http://127.0.0.1:8080)
+
+> **Note** : Le backend utilise SQLite (`mlflow.db`). Le fichier est créé automatiquement
+> au premier lancement s'il n'existe pas encore.
 
 ### Étape 2 — Prise en main (optionnel mais recommandé)
 
