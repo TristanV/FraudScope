@@ -93,11 +93,7 @@ Suivre les instructions dans `data/get_dataset.md`.
 
 ```bash
 # Terminal dédié (laisser tourner)
-mlflow server \
-  --host 127.0.0.1 \
-  --port 8080 \
-  --backend-store-uri sqlite:///mlflow.db \
-  --default-artifact-root ./mlruns
+mlflow server --host 127.0.0.1 --port 8080 --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns
 ```
 
 UI disponible sur [http://127.0.0.1:8080](http://127.0.0.1:8080)
@@ -124,11 +120,7 @@ Exécute les cellules dans l'ordre. Chaque section est commentée.
 
 ```bash
 # Nouveau terminal
-mlflow models serve \
-  --model-uri models:/FraudScopeXGB/Production \
-  --host 127.0.0.1 \
-  --port 5001 \
-  --no-conda
+mlflow models serve --model-uri models:/FraudScopeXGB/Production --host 127.0.0.1 --port 5001 --no-conda
 ```
 
 ### Étape 5 — Tester l'API
