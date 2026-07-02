@@ -27,6 +27,9 @@ build/
 # === MLFLOW ===
 mlruns/
 mlartifacts/
+# Base MLflow SQLite — locale, ne pas versionner
+mlflow.db
+*.db
 
 # === EVIDENTLY ===
 evidently_reports/*.html
