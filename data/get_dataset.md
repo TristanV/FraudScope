@@ -38,16 +38,35 @@ cd data && unzip ieee-fraud-detection.zip
 
 ## Dataset GNN — Elliptic Bitcoin Dataset
 
-**Source** : [PyTorch Geometric](https://pytorch-geometric.readthedocs.io/en/latest/generated/torch_geometric.datasets.EllipticBitcoinDataset.html)
+**Source** : [Kaggle — Elliptic Data Set](https://www.kaggle.com/datasets/ellipticco/elliptic-data-set)
 
-Ce dataset est téléchargé **automatiquement** lors de l'exécution du notebook `02_modelling.ipynb` via PyTorch Geometric :
+Ce dataset doit être **téléchargé manuellement** depuis Kaggle, puis placé dans le dossier `data/elliptic/`.
 
-```python
-from torch_geometric.datasets import EllipticBitcoinDataset
-dataset = EllipticBitcoinDataset(root='data/elliptic')
+### Instructions
+
+1. Accéder au dataset : [Elliptic Data Set sur Kaggle](https://www.kaggle.com/datasets/ellipticco/elliptic-data-set)
+2. Cliquer sur **Download** (nécessite un compte Kaggle)
+3. Décompresser l'archive et placer les 3 fichiers CSV dans `data/elliptic/` :
+   - `elliptic_txs_features.csv`
+   - `elliptic_txs_edgelist.csv`
+   - `elliptic_txs_classes.csv`
+
+### Via l'API Kaggle (recommandé)
+
+```bash
+kaggle datasets download -d ellipticco/elliptic-data-set -p data/elliptic/
+cd data/elliptic && unzip elliptic-data-set.zip
 ```
 
-Aucune action manuelle n'est nécessaire.
+### Description des fichiers
+
+| Fichier | Description | Taille approx. |
+|---------|-------------|----------------|
+| `elliptic_txs_features.csv` | 203 features anonymisées pour 203 238 transactions Bitcoin | ~658 Mo |
+| `elliptic_txs_edgelist.csv` | Arêtes du graphe de transactions (source → destination) | ~4,3 Mo |
+| `elliptic_txs_classes.csv` | Labels : `1` = illicite, `2` = licite, `unknown` = non labellisé | ~3,2 Mo |
+
+> **Note** : le dataset couvre 49 pas de temps (time steps) correspondant à des blocs Bitcoin entre 2011 et 2013. Seules ~21% des transactions sont labellisées.
 
 ---
 
@@ -56,11 +75,14 @@ Aucune action manuelle n'est nécessaire.
 ```
 data/
 ├── get_dataset.md              ← ce fichier (inclus dans le repo)
-├── train_transaction.csv       ← à télécharger depuis Kaggle
-├── train_identity.csv          ← à télécharger depuis Kaggle
-├── test_transaction.csv        ← à télécharger depuis Kaggle
-├── test_identity.csv           ← à télécharger depuis Kaggle
-└── elliptic/                   ← créé automatiquement par PyTorch Geometric
+├── train_transaction.csv       ← à télécharger depuis Kaggle (IEEE-CIS)
+├── train_identity.csv          ← à télécharger depuis Kaggle (IEEE-CIS)
+├── test_transaction.csv        ← à télécharger depuis Kaggle (IEEE-CIS)
+├── test_identity.csv           ← à télécharger depuis Kaggle (IEEE-CIS)
+└── elliptic/                   ← à créer manuellement
+    ├── elliptic_txs_features.csv   ← à télécharger depuis Kaggle (Elliptic)
+    ├── elliptic_txs_edgelist.csv   ← à télécharger depuis Kaggle (Elliptic)
+    └── elliptic_txs_classes.csv    ← à télécharger depuis Kaggle (Elliptic)
 ```
 
 > ⚠️ Tous les fichiers `.csv` et le dossier `elliptic/` sont exclus du dépôt via `.gitignore`.
